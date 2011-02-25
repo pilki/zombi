@@ -1,18 +1,7 @@
-(***********************************************************************)
-(*                             ocamlbuild                              *)
-(*                                                                     *)
-(*  Nicolas Pouillard, Berke Durak, projet Gallium, INRIA Rocquencourt *)
-(*                                                                     *)
-(*  Copyright 2007 Institut National de Recherche en Informatique et   *)
-(*  en Automatique.  All rights reserved.  This file is distributed    *)
-(*  under the terms of the Q Public License version 1.0.               *)
-(*                                                                     *)
-(***********************************************************************)
-
-
 (* Original author: Alexandre Pilkiewicz *)
+open Printf
 
-(* should be in a lib *)
+(* XXX should be in a lib *)
 let rec take n l =
   match l with
   | [] -> []
@@ -20,14 +9,21 @@ let rec take n l =
 
 
 
-(* those two lists must be the same *)
+(* those two lists *must* be the same *)
 
 type log_level = [`ZBug | `Error | `Warning | `Message | `Command]
 let log_levels = [`ZBug ; `Error ; `Warning ; `Message ; `Command]
+let log_names = ["Bug of Zombi"; "Error"; "Warning"; "Message"; "Command"]
+
+let name_of_level =
+  let assoc_list = List.combine log_levels log_names in
+  fun level ->
+    List.assoc level assoc_list
 
 let (shown_levels: log_level list ref) = ref []
 
 let show_verbose n =
+  shown_levels := [];
   List.iter (fun l -> shown_levels := l :: !shown_levels) (take n log_levels)
 
 let show_all () = show_verbose (List.length log_levels)
@@ -39,13 +35,13 @@ let show_messages () = shown_levels := `Message :: !shown_levels
 let show_commands () = shown_levels := `Command :: !shown_levels
 
 
+(* Handler of the log file. Set by set_log_file *)
 let log_file = ref None
 
-
 let log level message =
-  let message = message ^ "\n" in
+  let message = sprintf "%s: %s\n" (name_of_level level) message in
   if List.mem level !shown_levels then
-    (* this should be modified !*)
+    (* XXX to be modified if we change the ouptut method *)
     print_string message;
   match !log_file with
   | None -> ()
@@ -57,8 +53,7 @@ let warning = log `Warning
 let message = log `Message
 let command = log `Command
 
-(* sprintf stlye versions *)
-open Printf
+(* sprintf style versions *)
 let bug_pf s =
   ksprintf bug s
 let error_pf s =
@@ -71,6 +66,7 @@ let command_pf s =
   ksprintf command s
 
 
+(* failures *)
 let fail () = exit 1
 
 let failwith s =
@@ -86,12 +82,11 @@ let failbug s =
 
 let failbug_pf s = ksprintf failbug s
 
+
 let set_log_file s =
-  if !log_file = None then
-    begin
-      let oc = open_out s in
-      log_file := Some oc;
-      at_exit (fun () -> close_out oc)
-    end
-  else
-    log `Warning "The log file is set twice"
+  if !log_file <> None then
+    log `Warning "The log file is set twice";
+  let oc = open_out s in
+  log_file := Some oc;
+  at_exit (fun () -> close_out oc)
+

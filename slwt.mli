@@ -1,25 +1,54 @@
+(** implementation of "super light weight threads". In normal mode,
+    they are Lwt (written by Jerome Vouillon) threads. In "no unix"
+    mode, they must be reimplemented more simply *)
+
+(** type of threads *)
 type 'a slwt = 'a Lwt.t
 type 'a t = 'a slwt
+
+(** wakener *)
 type 'a wakeup_slwt
+
+(** the monad *)
 val return : 'a -> 'a slwt
 val fail : exn -> 'a slwt
 val bind : 'a slwt -> ('a -> 'b slwt) -> 'b slwt
+
+(** usefull syntax for bind *)
 val ( >>= ) : 'a slwt -> ('a -> 'b slwt) -> 'b slwt
 val ( =<< ) : ('a -> 'b slwt) -> 'a slwt -> 'b slwt
+
 val map : ('a -> 'b) -> 'a slwt -> 'b slwt
+(** syntax for map *)
 val ( >|= ) : 'a slwt -> ('a -> 'b) -> 'b slwt
 val ( =|< ) : ('a -> 'b) -> 'a slwt -> 'b slwt
+
+(** catch an exception : should replace try ... with *)
 val catch : (unit -> 'a slwt) -> (exn -> 'a slwt) -> 'a slwt
-val try_bind : (unit -> 'a slwt) -> ('a -> 'b slwt) -> (exn -> 'b slwt) -> 'b slwt
+
+(** like bind, except that
+    * the 'a slwt is "suspended"
+    * a third argument is the exception handler *)
+val try_bind : (unit -> 'a slwt) -> ('a -> 'b slwt) ->
+  (exn -> 'b slwt) -> 'b slwt
+
+
 (*val finalize : (unit -> 'a slwt) -> (unit -> unit t) -> 'a slwt
 val choose : 'a slwt list -> 'a slwt
 val join : unit t list -> unit t
 val ( <?> ) : 'a slwt -> 'a slwt -> 'a slwt
 val ( <&> ) : unit t -> unit t -> unit t
 val ignore_result : 'a slwt -> unit *)
+
+(** a fresh pair of a sleaping thread and a wakener *)
 val wait : unit -> 'a slwt * 'a wakeup_slwt
+
+(** wake up the sleaping thread with a value *)
 val wakeup : 'a wakeup_slwt -> 'a -> unit
+
+(** wake up the sleaping thread with an exception *)
 val wakeup_exn : 'a wakeup_slwt -> exn -> unit
+
 (*
 type 'a state = 'a Lwt.state = Return of 'a | Fail of exn | Sleep
 val state : 'a slwt -> 'a state
@@ -54,16 +83,31 @@ val delay_bind : 'a slwt -> ('a -> 'b slwt) -> 'b slwt * (unit -> unit)
 val ( >>>= ) : 'a slwt -> ('a -> 'b slwt) -> 'b slwt * (unit -> unit)
 
 
-(** [delay_launch f] will run f when you pass its argument to the second member of it's result *)
+(** [delay_launch f] will run f when you pass its argument to the
+second member of it's result *)
+
+(* it should have the type *)
 (*val delay_launch : ('a -> 'b slwt) -> ('b slwt * ('a -> unit))*)
+(* but this might be way harder to implement. We don't need more than
+   the following type for now on *)
 val delay_launch : (unit -> 'b slwt) -> ('b slwt * (unit -> unit))
 
 
+(** Pools of threads *)
 module Pool :
     sig
       type 'a t
-      val create : int ->
-	?check:('a -> (bool -> unit) -> unit) -> (unit -> 'a slwt) -> 'a t
+      val create :
+        (** number of threads in the pool *)
+        int ->
+        (**  XXX I don't know what it's for *)
+	?check:('a -> (bool -> unit) -> unit) ->
+        (** the function creating new 'a s*)
+        (unit -> 'a slwt) ->
+        (** resulting pool*)
+        'a t
+      (** [use p f] runs the function [f] when a thread in [p] is
+          available*)
       val use : 'a t -> ('a -> 'b slwt) -> 'b slwt
     end
 

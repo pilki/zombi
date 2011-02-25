@@ -1,9 +1,5 @@
 open Log
 
-(* implementation of "super light weight threads". In normal mode,
-   they are Lwt (written by Jerome Vouillon) threads. In "no unix"
-   mode, they must be reimplemented more simply *)
-
 type 'a slwt = 'a Lwt.t
 type 'a wakeup_slwt = 'a Lwt.u
 

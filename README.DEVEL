@@ -1,0 +1,6 @@
+Log: the loging system
+
+Slwt : super lightwieght thread. A interface to lwt that should be
+kept as minimal as possible to allow to write a potential non parallel
+version (to use zombi *before* lwt exists for exemple*)
+
