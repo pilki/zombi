@@ -12,7 +12,7 @@ open Path
     and will then be outputed by the finalize function. This way, we
     maintain the invariant that it is safe (even if not fast) when you
     want to check if a file has been modified to compare its hash from
-    what's in the cache *)
+    what's in the old cache *)
 
 type digest = Digest.t
 type digest_cache = (string, (string, digest) Hashtbl.t) Hashtbl.t
@@ -68,7 +68,9 @@ let init () =
 	  (message "The size of words is not the same. Creating a new cache.";
 	   create_caches ())
 	else begin
+          (* getting the old cache from the file*)
 	  let odig = Marshal.from_channel ic in
+          (* copying it the the new cache *)
 	  let ndig = Hashtbl.create 5 in
 	  Hashtbl.iter (fun k t -> Hashtbl.add ndig k (Hashtbl.copy t)) odig;
 	  old_digests := Some odig;

@@ -1,0 +1,24 @@
+File explaining the internal design of zombi. It is currently a
+draft. It is meant for the developers of zombi, and should probably by
+used as a basis for documentation for users of zombi.
+
+One of the first principle of zombi is to not mess up the source
+directory. For that, we use the same principle as in ocamlbuild and
+others: a separate build directory (it might be called _build in what
+follow.)
+
+
+All the rules are meant to act uniquely in the build dir with two
+exceptions:
+
+- The external dependencies. One can specify dependencies on an
+  external library. Say your program uses Batteries. You want it to be
+  rebuilt every time Batteries changes, so a dependency should be
+  added. But it's not a classical one since it does not ask the build
+  system to build nor import Batteries. I don't know yet how those
+  external dependencies are specified
+
+- The import rule. At first, the _build dir is empty, and must be
+  populated, typically from files in the source dir. See separated
+  file for the import rule.
+

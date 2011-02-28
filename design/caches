@@ -1,0 +1,8 @@
+Needed caches:
+
+
+source dir cache:
+
+store the stats and digest from previous run. Used by the import
+function to check if an import is needed.
+

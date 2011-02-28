@@ -1,0 +1,54 @@
+Description of the import action:
+
+The import action is used to import files from the source dir to the
+build dir and is fairly simple.
+
+An import type is:
+
+| IfExists: import the file if it exists in the build dir
+
+| ShouldNotExists: checks if the file exists, and fails if so (sanity
+  check in ocamlbuild)
+
+| DontImport: just don't import the file
+
+| MustImport: Checks if the file exists: if so, imports it, if not,
+  fails
+
+
+An import rule is:
+
+   - a set of files concerned by the rules
+
+   - an import type
+
+
+In the environment, a list of import rule, finishing by the rule (all
+file, IfExists)
+
+When a file needs to be built (and has not yet been), we try to import
+it. It is done in several steps:
+
+1) find the first rule in the list that matches the file name (the
+last rule matches everything)
+
+2) execute the corresponding action. If the action is to import the
+file, check first if it has changed, and if not, if the corresponding
+one in the build dir is still the same. If not, probably emit a
+warning. Failure are failure of the complete build. (XXX: think about
+the -k option?). Again, if the action is to import the file, update
+the *new* cache of the source *and* build dir.
+
+The failure for ShouldNotExists may be deactivated by a "no sanity"
+option
+
+
+
+
+Typical situation:
+
+In general, .o files should not be in the source dir, so a rule (*.o,
+ShouldNotExists) is added. But then some closed sources third party
+library may be used. Imagine the .o's are in the third_party. Then a
+rule (third_party/*.o, IfExists) can be added on top.
+

@@ -9,11 +9,3 @@ type command_descr = [`Command of string |`Other of string]
 
 type writing_witness
 
-Module 
-  
-  class type bar :
-    object
-      inherit foo
-      method bar : float
-    end
-
