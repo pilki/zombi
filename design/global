@@ -22,3 +22,47 @@ exceptions:
   populated, typically from files in the source dir. See separated
   file for the import rule.
 
+
+
+
+
+Quick notes:
+
+for rules, two categories of dependencies: blocking and optional:
+
+- Blocking dependencies block the execution of the rule if they can't
+  be built. Example: to build a .cmo file, the corresponding .ml file
+  is a blocking dependency
+
+
+Need a way to "accumulate" dependencies.
+
+
+We need an exclusion clause in rules:
+In caml, you can obtain a .cmi file:
+
+- From a .mli file, with ocamlc -c or ocamlopt -c
+
+- From a .ml file, IF NO .MLI FILE EXISTS with ocamlc -c (producing a
+  .cmo file at the same time) or with ocamlopt -c, producing a .cmx
+  and .o file
+
+So we need the following rules:
+
+%.mli -> %.cmi
+%.ml & %.cmi -> %.cmo
+%.ml - %.mli -> %.cmo & %.cmi
+%.ml & %.cmi -> %.cmx & %.o
+%.ml - %.mli -> %.cmx & %.cmi %.o
+
+
+
+
+
+Rules should receive the dependence tree as argument. The reason is,
+once again, because of ocaml (but probably also for C in fact):
+
+
+
+
+
