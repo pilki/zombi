@@ -58,10 +58,10 @@ So we need the following rules:
 
 
 
-
 Rules should receive the dependence tree as argument. The reason is,
-once again, because of ocaml (but probably also for C in fact):
-
+once again, because of ocaml (but probably also for C in fact): Each
+module can be compiled on its own, but the final executable must be
+assembled with all the .cmx on the command line
 
 
 
